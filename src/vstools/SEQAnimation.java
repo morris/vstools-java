@@ -6,6 +6,12 @@ import com.jme3.math.FastMath;
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 
+/**
+ * See http://datacrystal.romhacking.net/wiki/Vagrant_Story:SEQ_files
+ * 
+ * @author morris
+ * 
+ */
 public class SEQAnimation extends Data {
 
     public SEQAnimation(SEQ seq, ByteArray data) {
@@ -13,27 +19,31 @@ public class SEQAnimation extends Data {
 	this.seq = seq;
     }
 
-    public void read(SEQ seq, int id) {
-	this.seq = seq;
+    public void header(int id) {
 	this.id = id;
-	numFrames = s16();
-	idOtherPose = s8();
-	mode = u8();
-	ptr1 = s16();
-	ptrTranslation = s16();
-	ptrMove = s16();
+	numFrames = s16(); // not sure about this
+	idOtherAnimation = s8(); // some animations use a different animation as
+				 // base
+	mode = u8(); // this is
 
+	ptr1 = s16(); // seems to point to an opcode block that controls looping
+	ptrTranslation = s16(); // points to a translation vector for the
+				// animated character
+	ptrMove = s16(); // points to an opcode block that controls movement
+
+	// just some logging
 	log("animation " + id);
 	log("numFrames: " + numFrames);
-	log("idOtherPose: " + idOtherPose);
+	log("idOtherPose: " + idOtherAnimation);
 	log("mode: " + mode);
 	log("ptr1: " + hex(seq.ptrData(ptr1)) + " (" + ptr1 + ") "
 		+ hex(seq.ptrDataRam(ptr1)));
-	log("ptrRoot: " + hex(seq.ptrData(ptrTranslation)) + " ("
+	log("ptrTranslation: " + hex(seq.ptrData(ptrTranslation)) + " ("
 		+ ptrTranslation + ") " + hex(seq.ptrDataRam(ptrTranslation)));
-	log("ptr2: " + hex(seq.ptrData(ptrMove)) + " (" + ptrMove + ") "
+	log("ptrMove: " + hex(seq.ptrData(ptrMove)) + " (" + ptrMove + ") "
 		+ hex(seq.ptrDataRam(ptrMove)));
 
+	// read pointers to rotations and opcodes for individual joints
 	ptrJoints = new int[seq.numJoints];
 	for (int i = 0; i < seq.numJoints; ++i) {
 	    ptrJoints[i] = s16();
@@ -49,7 +59,7 @@ public class SEQAnimation extends Data {
     public void compute() {
 	log("computing animation " + id);
 
-	// translation offset
+	// read translation
 	// big endian
 	data.seek(seq.dataPtr + ptrTranslation);
 
@@ -57,13 +67,18 @@ public class SEQAnimation extends Data {
 	y = s16big();
 	z = s16big();
 
+	// TODO implement move
+
+	// initialize joint rotations
 	quaternions = new Quaternion[seq.numJoints];
 
+	// set base animation
 	SEQAnimation base = this;
-	if (idOtherPose != -1) {
-	    base = seq.animations[idOtherPose];
+	if (idOtherAnimation != -1) {
+	    base = seq.animations[idOtherAnimation];
 	}
 
+	// read rotation and opcodes
 	for (int i = 0; i < seq.numJoints; ++i) {
 	    data.seek(seq.dataPtr + base.ptrJoints[i]);
 
@@ -73,6 +88,7 @@ public class SEQAnimation extends Data {
 
 	log("translation " + x + " " + y + " " + z);
 
+	// build animation
 	animation();
     }
 
@@ -92,6 +108,9 @@ public class SEQAnimation extends Data {
     }
 
     public void opcodes(int i) {
+	// this mostly follows
+	// http://datacrystal.romhacking.net/wiki/Vagrant_Story:SEQ_files
+
 	int f = 0;
 	while (true) {
 	    int op = u8();
@@ -170,21 +189,10 @@ public class SEQAnimation extends Data {
 	}
     }
 
-    public float convert(int angle) {
-	return angle * CONVERT;
-    }
-
-    public void dumpHex() {
-	String dump = "";
-	for (int i = ptrBegin; i < ptrEnd; ++i) {
-	    dump += Integer.toHexString(u(data.data[i])) + " ";
-	    if (i > ptrBegin && (i - ptrBegin % 16) == 0) {
-		dump += "\n";
-	    }
-	}
-	log(dump);
-    }
-
+    /**
+     * builds the animation for jmonkey. every joint uses two jme bones, one for
+     * rotation and one for translation.
+     */
     public void animation() {
 	if (seq.shp != null) {
 	    animation = new Animation("Animation" + id, 0.5f);
@@ -215,13 +223,18 @@ public class SEQAnimation extends Data {
 	}
     }
 
+    public float convert(int angle) {
+        return angle * CONVERT;
+    }
+
+    // conversion factor for rotations to radians
     public static final float CONVERT = (1.0f / 4096.0f) * 2.0f * FastMath.PI;
 
     public SEQ seq;
 
     public int id;
     public int numFrames;
-    public int idOtherPose;
+    public int idOtherAnimation;
     public int mode;
     public int ptr1;
     public int ptrTranslation;
@@ -232,9 +245,6 @@ public class SEQAnimation extends Data {
     public int x;
     public int y;
     public int z;
-
-    public int ptrBegin;
-    public int ptrEnd;
 
     public Animation animation;
 }

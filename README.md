@@ -19,12 +19,14 @@ This code is developed for the US Version of Vagrant Story.
 The following guide outlines how to run the viewer from Eclipse.
 
 1. If you haven't already, download and install Eclipse (for Java).
-2. Download the vs source and extract it in your workspace.
+2. Download the vstools source and extract it in your workspace.
 3. Create an Eclipse Java Project from the source.
-4. Download and extract jMonkeyEngine3.
+4. Download and extract the latest nightly build of jMonkeyEngine3 from http://www.jmonkeyengine.com/nightly/ (works with jME3_2013-05-07.zip).
 5. Add jMonkeyEngine3.jar to your project's build path.
 6. Copy config.dist.ini to config.ini and set dataPath.
 7. Run the GUI (or any other main methods, such as tests).
+
+See also http://jmonkeyengine.org/wiki/doku.php/jme3:setting_up_jme3_in_eclipse
 
 ## Acknowledgements
 

@@ -94,7 +94,6 @@ public class Viewer extends SimpleApplication implements ActionListener {
 
     public void prevAnim() {
 	if (shp != null && seq != null) {
-	    System.out.println("foo");
 	    animIndex = (animIndex - 1 + seq.animations.length)
 		    % seq.animations.length;
 	    channel.setAnim("Animation" + animIndex, 0.5f);
