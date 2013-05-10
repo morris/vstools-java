@@ -2,8 +2,6 @@ package vstools;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.ByteBuffer;
-
 import com.jme3.animation.AnimChannel;
 import com.jme3.animation.Skeleton;
 import com.jme3.app.SimpleApplication;
@@ -13,21 +11,14 @@ import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.KeyTrigger;
 import com.jme3.light.SpotLight;
 import com.jme3.material.Material;
-import com.jme3.material.RenderState.BlendMode;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
-import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
-import com.jme3.scene.Mesh;
 import com.jme3.scene.Node;
-import com.jme3.scene.Spatial.CullHint;
-
 import com.jme3.scene.debug.SkeletonDebugger;
 import com.jme3.scene.shape.Box;
-import com.jme3.texture.Image;
 import com.jme3.texture.Texture;
 import com.jme3.texture.Texture2D;
-import com.jme3.util.BufferUtils;
 
 public class Viewer extends SimpleApplication implements ActionListener {
 
@@ -37,8 +28,8 @@ public class Viewer extends SimpleApplication implements ActionListener {
 	// register "assets" subdirectory
 	assetManager.registerLocator("assets", FileLocator.class);
 
-	// unit box
-	box = new Box(Vector3f.ZERO, 1, 1, 1);
+	// unit cube
+	box = new Box(0.5f, 0.5f, 0.5f);
 
 	initFlyCam();
 
@@ -90,6 +81,9 @@ public class Viewer extends SimpleApplication implements ActionListener {
 	    flyCamLight.setPosition(cam.getLocation());
 	    flyCamLight.setDirection(cam.getDirection());
 	}
+	if(node != null) {
+	    node.updateModelBound();
+	}
     }
 
     public void prevAnim() {
@@ -108,11 +102,34 @@ public class Viewer extends SimpleApplication implements ActionListener {
     }
 
     public void onAction(String name, boolean keyPressed, float tpf) {
-	if(name.equals("prevAnim") && !keyPressed) {
+	if (name.equals("prevAnim") && !keyPressed) {
 	    prevAnim();
-	} else if(name.equals("nextAnim") && !keyPressed) {
+	} else if (name.equals("nextAnim") && !keyPressed) {
 	    nextAnim();
+	} else if(name.equals("debugSkeleton") && !keyPressed) {
+	    debugSkeleton(skeleton, node);
 	}
+    }
+
+    public void openWEP(File file) {
+        // remove current node
+        if (node != null) {
+            node.removeFromParent();
+        }
+    
+        try {
+            WEP wep = null;
+    
+            wep = new WEP(Util.read(file));
+            wep.read();
+            wep.build(unshaded());
+    
+            // finally, attach node to scene
+            node = wep.getNode();
+            rootNode.attachChild(node);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void openSHP(File file) {
@@ -120,7 +137,7 @@ public class Viewer extends SimpleApplication implements ActionListener {
 	if (node != null) {
 	    node.removeFromParent();
 	}
-	
+
 	// unset current seq
 	seq = null;
 	animIndex = 0;
@@ -128,15 +145,11 @@ public class Viewer extends SimpleApplication implements ActionListener {
 	try {
 	    shp = new SHP(Util.read(file));
 	    shp.read();
-
-	    shp.buildSkeleton();
-	    shp.buildMesh();
-	    shp.buildNode();
-	    shp.buildMaterial(new Material(assetManager,
-		    "Common/MatDefs/Misc/Unshaded.j3md"));
+	    shp.build(unshaded());
 
 	    // scene creation
 	    node = shp.node;
+	    skeleton = shp.skeleton;
 	    rootNode.attachChild(node);
 	} catch (Exception e) {
 	    e.printStackTrace();
@@ -144,130 +157,56 @@ public class Viewer extends SimpleApplication implements ActionListener {
     }
 
     public void openSEQ(File file) {
-	try {
-	    seq = new SEQ(shp, Util.read(file));
-	    seq.read();
-	    shp.setSEQ(seq);
-
-	    animIndex = 0;
-	    channel = shp.control.createChannel();
-	    channel.setAnim("Animation0");
-	} catch (Exception e) {
-	    e.printStackTrace();
-	}
+        try {
+            seq = new SEQ(shp, Util.read(file));
+            seq.read();
+            shp.setSEQ(seq);
+    
+            animIndex = 0;
+            channel = shp.control.createChannel();
+            channel.setAnim("Animation0");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
-    public void openARM(File file) {
-	// remove current node
-	if (node != null) {
-	    node.removeFromParent();
-	}
-
-	try {
-	    ARM arm = new ARM(Util.read(file));
-
-	    arm.read();
-	    arm.build(this);
-	    node = arm.node;
-	    rootNode.attachChild(node);
-	} catch (IOException e) {
-	    e.printStackTrace();
-	}
-    }
-
+    /**
+     * TODO this is broken. animations don't load properly.
+     * @param file
+     */
     public void openZUD(File file) {
-	// remove current node
-	if (node != null) {
-	    node.removeFromParent();
-	}
-
-	try {
-	    ZUD zud = null;
-
-	    zud = new ZUD(Util.read(file));
-	    zud.read();
-
-	    shp = zud.shp;
-	    shp.buildSkeleton();
-	    shp.buildMesh();
-	    shp.buildNode();
-	    shp.buildMaterial(new Material(assetManager,
-		    "Common/MatDefs/Misc/Unshaded.j3md"));
-
-	    seq = zud.com;
-	    if (seq == null) {
-		seq = zud.bt;
-	    }
-
-	    shp.setSEQ(seq);
-
-	    channel = shp.control.createChannel();
-	    channel.setAnim("Animation0");
-
-	    // debug skeleton
-	    debugSkeleton(shp.skeleton, shp.node);
-
-	    node = zud.getNode();
-	    rootNode.attachChild(node);
-	} catch (Exception e) {
-	    e.printStackTrace();
-	}
-    }
-
-    public void openWEP(File file) {
-	// remove current node
-	if (node != null) {
-	    node.removeFromParent();
-	}
-
-	try {
-	    WEP wep = null;
-
-	    wep = new WEP(Util.read(file));
-	    wep.read();
-	    wep.build(0);
-
-	    // wep.buildSkeleton();
-	    wep.buildMesh();
-
-	    Mesh mesh = wep.mesh;
-	    Skeleton skeleton = wep.skeleton;
-
-	    // scene creation
-	    node = new Node();
-
-	    if (mesh != null) {
-		System.out.println("here");
-		// create and attach node
-		Geometry meshGeom = new Geometry("Mesh", mesh);
-
-		// material
-		Material mat = buildTexture(wep.textureMap.buffer,
-			wep.textureMap.width, wep.textureMap.height);
-		// mat = wireframe(ColorRGBA.Blue);
-
-		meshGeom.setMaterial(mat);
-		mesh.updateBound();
-
-		node.attachChild(meshGeom);
-	    }
-
-	    node.scale(0.1f);
-	    node.rotate(FastMath.PI, 0, 0);
-	    node.setCullHint(CullHint.Never);
-
-	    // debug skeleton
-	    debugSkeleton(skeleton, node);
-
-	    // finally, attach node to scene
-	    rootNode.attachChild(node);
-	} catch (Exception e) {
-	    e.printStackTrace();
-	}
-    }
-
-    public void openZND(File file) {
-	// TODO
+        // remove current node
+        if (node != null) {
+            node.removeFromParent();
+        }
+    
+        try {
+            ZUD zud = null;
+    
+            zud = new ZUD(Util.read(file));
+            zud.read();
+    
+            shp = zud.shp;
+            shp.build(unshaded());
+    
+            seq = zud.com;
+            if (seq == null) {
+        	seq = zud.bt;
+            }
+    
+            shp.setSEQ(seq);
+    
+            channel = shp.control.createChannel();
+            channel.setAnim("Animation0");
+    
+            // debug skeleton
+            debugSkeleton(shp.skeleton, shp.node);
+    
+            node = zud.getNode();
+            rootNode.attachChild(node);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public void openMPD(File file) {
@@ -287,29 +226,33 @@ public class Viewer extends SimpleApplication implements ActionListener {
 	}
     }
 
-    public Material buildTexture(byte[] buffer, int width, int height) {
-	Material mat = new Material(assetManager,
-		"Common/MatDefs/Misc/Unshaded.j3md");
-	mat.getAdditionalRenderState().setBlendMode(BlendMode.Alpha);
+    public void openZND(File file) {
+        // TODO
+    }
 
-	ByteBuffer bb = BufferUtils.createByteBuffer(buffer);
-
-	Image image = new Image(Image.Format.ABGR8, width, height, bb);
-
-	Texture2D texture = new Texture2D(image);
-	texture.setImage(image);
-	texture.setMagFilter(Texture2D.MagFilter.Nearest);
-	mat.setTexture("ColorMap", texture);
-
-	return mat;
+    public void openARM(File file) {
+        // remove current node
+        if (node != null) {
+            node.removeFromParent();
+        }
+    
+        try {
+            ARM arm = new ARM(Util.read(file));
+    
+            arm.read();
+            arm.build(this);
+            node = arm.node;
+            rootNode.attachChild(node);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     public void debugSkeleton(Skeleton skeleton, Node node) {
 	if (skeleton != null && node != null) {
-	    SkeletonDebugger skeletonDebug = new SkeletonDebugger("skeleton",
+	    skeletonDebug = new SkeletonDebugger("skeleton",
 		    skeleton);
-	    Material mat = new Material(assetManager,
-		    "Common/MatDefs/Misc/Unshaded.j3md");
+	    Material mat = unshaded();
 	    mat.setColor("Color", ColorRGBA.Green);
 	    mat.getAdditionalRenderState().setDepthTest(false);
 	    skeletonDebug.setMaterial(mat);
@@ -318,8 +261,7 @@ public class Viewer extends SimpleApplication implements ActionListener {
     }
 
     public Material wireframe(ColorRGBA c) {
-	Material mat = new Material(assetManager,
-		"Common/MatDefs/Misc/Unshaded.j3md");
+	Material mat = unshaded();
 	mat.getAdditionalRenderState().setWireframe(true);
 	mat.setColor("Color", c);
 	return mat;
@@ -335,24 +277,23 @@ public class Viewer extends SimpleApplication implements ActionListener {
 	return mat;
     }
 
-    public Box getBox() {
-	return box;
+    public Material unshaded() {
+	return new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
     }
 
     public Material flat(ColorRGBA c) {
-	Material mat = new Material(assetManager,
-		"Common/MatDefs/Light/Lighting.j3md");
-
-	mat.setColor("Diffuse", c);
-	mat.setColor("Ambient", c);
-	mat.setColor("Specular", c);
-	mat.setBoolean("UseMaterialColors", true);
-	return mat;
+        Material mat = new Material(assetManager,
+        	"Common/MatDefs/Light/Lighting.j3md");
+    
+        mat.setColor("Diffuse", c);
+        mat.setColor("Ambient", c);
+        mat.setColor("Specular", c);
+        mat.setBoolean("UseMaterialColors", true);
+        return mat;
     }
 
-    public static void mainUnused(String[] args) {
-	Viewer viewer = new Viewer();
-	viewer.start();
+    public Box getBox() {
+	return box;
     }
 
     private Box box;
@@ -368,4 +309,6 @@ public class Viewer extends SimpleApplication implements ActionListener {
     private SHP shp; // current shp
     private SEQ seq; // current seq
     private Node node; // current node in viewer
+    private Skeleton skeleton; // skeleton of current node
+    private SkeletonDebugger skeletonDebug; 
 }

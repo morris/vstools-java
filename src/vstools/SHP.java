@@ -7,6 +7,8 @@ public class SHP extends WEP {
     }
 
     public void header() {
+	
+	log("SHP header");
 
 	header1();
 
@@ -19,7 +21,7 @@ public class SHP extends WEP {
 
 	skip(0x24); // unknown
 
-	skip(0x6); // collision
+	skip(0x6); // collision, not sure about this
 	menuPositionY = s16();
 	skip(0xc); // u
 	shadowRadius = s16();
@@ -71,6 +73,8 @@ public class SHP extends WEP {
     }
 
     public void data() {
+	log("SHP data");
+	
 	logpos();
 	jointSection();
 	logpos();
@@ -108,12 +112,25 @@ public class SHP extends WEP {
     public void read() {
 	header();
 	data();
-	build(0);
+    }
+    
+    public void setSEQ(SEQ seq) {
+	this.activeSeq = seq;
+
+	// remove current animations
+	for (String animName : control.getAnimationNames()) {
+	    control.removeAnim(control.getAnim(animName));
+	}
+
+	// set new animations
+	for (int i = 0; i < seq.animations.length; ++i) {
+	    control.addAnim(seq.animations[i].animation);
+	}
     }
 
     public static void single() {
 	try {
-	    SHP t = new SHP(Util.read("OBJ/26.SHP"));
+	    SHP t = new SHP(Util.read("OBJ/00.SHP"));
 	    t.read();
 	} catch (Exception e) {
 	    e.printStackTrace();
@@ -121,8 +138,8 @@ public class SHP extends WEP {
     }
 
     public static void main(String[] args) {
-	//single();
-	Util.test(true, Util.file("OBJ"), "SHP", SHP.class);
+	single();
+	// Util.test(true, Util.file("OBJ"), "SHP", SHP.class);
     }
 
     public int[] overlayX = new int[8];
@@ -153,4 +170,7 @@ public class SHP extends WEP {
 
     public int akao;
     public int[] akaoTable;
+    
+    public SEQ[] seqs;
+    public SEQ activeSeq;
 }

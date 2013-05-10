@@ -7,12 +7,12 @@ public class WEPGroup extends Data {
     }
 
     public void read() {
-	joint = s16();
+	jointId = s16();
 	lastVertex = u16();
     }
     
-    public int joint;
+    public int jointId;
     public int lastVertex;
     
-    public WEPJoint jointObject;
+    public WEPJoint joint;
 }

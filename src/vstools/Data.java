@@ -130,14 +130,14 @@ public class Data {
     }
     
     /**
-     * Convert (x,y) coordinates on an image to real UV coordinates.
+     * Convert absolute coordinates on an image to relative UV coordinates.
      * @param x
      * @param y
      * @param width image width
      * @param height image height
      * @return
      */
-    public Vector2f uvf(int x, int y, int width, int height) {
+    public Vector2f abs2uv(int x, int y, int width, int height) {
 	return new Vector2f((float) x / (float) width, (float) y / (float) height);
     }
 

@@ -9,7 +9,7 @@ public class WEPJoint extends Data {
     public void read() {
 	length = -s16(); // negative
 	skip(2); // always 0xFF, no effect on joint size or model
-	parentJoint = s8();
+	parentJointId = s8();
 	x = s8();
 	y = s8();
 	z = s8();
@@ -24,12 +24,12 @@ public class WEPJoint extends Data {
     }
 
     public int length;
-    public int parentJoint;
+    public int parentJointId;
     public int x;
     public int y;
     public int z;
     public int mode;
     
-    public WEPJoint parentObject;
+    public WEPJoint parentJoint;
     public String name;
 }

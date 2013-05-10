@@ -112,7 +112,7 @@ public class SEQ extends Data {
     public static void single() {
 	try {
 	    SHP shp = new SHP(Util.read("OBJ/00.SHP"));
-	    shp.all();
+	    shp.read();
 	    SEQ seq = new SEQ(shp, Util.read("OBJ/00_COM.SEQ"));
 	    seq.read();
 	    seq.opcodes();

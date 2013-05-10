@@ -110,10 +110,10 @@ public class MPDGroup extends Data {
 		normals[iv + 2] = n;
 		normals[iv + 3] = n;
 
-		uv[iv] = uvf(p.u1, p.v1, textureWidth, textureHeight);
-		uv[iv + 1] = uvf(p.u2, p.v2, textureWidth, textureHeight);
-		uv[iv + 2] = uvf(p.u3, p.v3, textureWidth, textureHeight);
-		uv[iv + 3] = uvf(p.u4, p.v4, textureWidth, textureHeight);
+		uv[iv] = abs2uv(p.u1, p.v1, textureWidth, textureHeight);
+		uv[iv + 1] = abs2uv(p.u2, p.v2, textureWidth, textureHeight);
+		uv[iv + 2] = abs2uv(p.u3, p.v3, textureWidth, textureHeight);
+		uv[iv + 3] = abs2uv(p.u4, p.v4, textureWidth, textureHeight);
 
 		// 321
 		indices[ii] = iv + 2;
@@ -141,9 +141,9 @@ public class MPDGroup extends Data {
 		normals[iv + 1] = n;
 		normals[iv + 2] = n;
 
-		uv[iv] = uvf(p.u1, p.v1, textureWidth, textureHeight);
-		uv[iv + 1] = uvf(p.u2, p.v2, textureWidth, textureHeight);
-		uv[iv + 2] = uvf(p.u3, p.v3, textureWidth, textureHeight);
+		uv[iv] = abs2uv(p.u1, p.v1, textureWidth, textureHeight);
+		uv[iv + 1] = abs2uv(p.u2, p.v2, textureWidth, textureHeight);
+		uv[iv + 2] = abs2uv(p.u3, p.v3, textureWidth, textureHeight);
 
 		indices[ii] = iv + 2;
 		indices[ii + 1] = iv + 1;

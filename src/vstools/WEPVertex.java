@@ -17,7 +17,8 @@ public class WEPVertex extends Data {
     public int x;
     public int y;
     public int z;
-    public int group;
-    public WEPGroup groupObject;
-    public int joint;
+    
+    public int groupId;
+    public WEPGroup group;
+    public int jointId;
 }

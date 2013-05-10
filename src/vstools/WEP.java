@@ -1,6 +1,5 @@
 package vstools;
 
-import java.io.File;
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
 
@@ -18,7 +17,6 @@ import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
 import com.jme3.scene.Node;
 import com.jme3.scene.VertexBuffer;
-import com.jme3.scene.Spatial.CullHint;
 import com.jme3.scene.VertexBuffer.Format;
 import com.jme3.scene.VertexBuffer.Type;
 import com.jme3.scene.VertexBuffer.Usage;
@@ -26,8 +24,9 @@ import com.jme3.util.BufferUtils;
 
 /**
  * WEP data structure reader and builder
+ * 
  * @author morris
- *
+ * 
  */
 public class WEP extends Data {
 
@@ -35,43 +34,14 @@ public class WEP extends Data {
 	super(data);
     }
 
-    public void all() {
-	read();
-	build(0);
-	buildMesh();
-	buildSkeleton();
-	buildNode();
-    }
-
     public void read() {
 	header();
 	data();
-	build(0);
-    }
-
-    public void header1() {
-	skip(4); // "H01 "
-
-	numJoints = u8();
-	numGroups = u8();
-	numTriangles = u16();
-	numQuads = u16();
-	numPolygons = u16();
-	numAllPolygons = numTriangles + numQuads + numPolygons;
-
-	logHeader();
-    }
-
-    public void logHeader() {
-	log("numberOfJoints: " + numJoints);
-	log("numberOfGroups: " + numGroups);
-	log("numberOfTriangles: " + numTriangles);
-	log("numberOfQuads: " + numQuads);
-	log("numberOfPolygons " + numPolygons);
-	log("numberOfAllPolygons: " + numAllPolygons);
     }
 
     public void header() {
+
+	log("WEP header");
 
 	header1();
 
@@ -96,16 +66,37 @@ public class WEP extends Data {
 	jointPtr = 0x4C + 0x4;
     }
 
+    public void header1() {
+	skip(4); // "H01 "
+
+	numJoints = u8();
+	numGroups = u8();
+	numTriangles = u16();
+	numQuads = u16();
+	numPolygons = u16();
+	numAllPolygons = numTriangles + numQuads + numPolygons;
+
+	logHeader();
+    }
+
+    public void logHeader() {
+	log("numberOfJoints: " + numJoints);
+	log("numberOfGroups: " + numGroups);
+	log("numberOfTriangles: " + numTriangles);
+	log("numberOfQuads: " + numQuads);
+	log("numberOfPolygons " + numPolygons);
+	log("numberOfAllPolygons: " + numAllPolygons);
+    }
+
     public void data() {
+
+	log("WEP data");
 
 	jointSection();
 	groupSection();
 	vertexSection();
 	polygonSection();
 	textureSection(5);
-
-	// we are done
-	log("done");
     }
 
     public void jointSection() {
@@ -119,12 +110,12 @@ public class WEP extends Data {
 	    WEPJoint j = joints[i];
 
 	    // set parentObject
-	    if (j.parentJoint < joints.length) {
-		j.parentObject = joints[j.parentJoint];
+	    if (j.parentJointId < joints.length) {
+		j.parentJoint = joints[j.parentJointId];
 	    }
 
-	    log("joint " + i + ": s=" + j.length + " p=" + j.parentJoint + " " + j.x
-		    + " " + j.y + " " + j.z + " " + j.mode);
+	    log("joint " + i + ": s=" + j.length + " p=" + j.parentJointId
+		    + " " + j.x + " " + j.y + " " + j.z + " " + j.mode);
 	}
     }
 
@@ -133,8 +124,8 @@ public class WEP extends Data {
 	for (int i = 0; i < numGroups; ++i) {
 	    groups[i] = new WEPGroup(data);
 	    groups[i].read();
-	    groups[i].jointObject = joints[groups[i].joint];
-	    log("group " + i + ": joint=" + groups[i].joint + " lv="
+	    groups[i].joint = joints[groups[i].jointId];
+	    log("group " + i + ": joint=" + groups[i].jointId + " lv="
 		    + groups[i].lastVertex);
 	}
     }
@@ -151,9 +142,9 @@ public class WEP extends Data {
 	    }
 	    vertices[i] = new WEPVertex(data);
 	    vertices[i].read();
-	    vertices[i].group = g;
-	    vertices[i].groupObject = groups[g];
-	    vertices[i].joint = groups[g].joint;
+	    vertices[i].groupId = g;
+	    vertices[i].group = groups[g];
+	    vertices[i].jointId = groups[g].jointId;
 	}
     }
 
@@ -165,14 +156,23 @@ public class WEP extends Data {
 	}
     }
 
-    public void textureSection(int palettes) {
+    public void textureSection(int numPalettes) {
 	textureMap = new WEPTextureMap(data);
-	textureMap.read(palettes);
+	textureMap.read(numPalettes);
     }
 
-    public void build(int palette) {
-	log("building...");
+    public void build(Material material) {
+	build(material, 0);
+    }
 
+    public void build(Material material, int paletteId) {
+	buildMesh();
+	buildMaterial(material, paletteId);
+	buildSkeleton();
+	buildNode();
+    }
+
+    public void buildMesh() {
 	// count indices
 	int ni = 0;
 	int nv = 0;
@@ -213,28 +213,28 @@ public class WEP extends Data {
 	for (int i = 0; i < polygons.length; ++i) {
 	    WEPPolygon p = polygons[i];
 	    if (p.quad()) {
-		vertices3[jv] = vec3(p.vertex1);
-		vertices3[jv + 1] = vec3(p.vertex2);
-		vertices3[jv + 2] = vec3(p.vertex3);
-		vertices3[jv + 3] = vec3(p.vertex4);
+		vertices3[jv] = pos(p.vertex1);
+		vertices3[jv + 1] = pos(p.vertex2);
+		vertices3[jv + 2] = pos(p.vertex3);
+		vertices3[jv + 3] = pos(p.vertex4);
 
 		verticesMap[jv] = p.vertex1;
 		verticesMap[jv + 1] = p.vertex2;
 		verticesMap[jv + 2] = p.vertex3;
 		verticesMap[jv + 3] = p.vertex4;
 
-		uv[jv] = uvf(p.u1, p.v1, textureMap.width, textureMap.height);
-		uv[jv + 1] = uvf(p.u2, p.v2, textureMap.width,
+		uv[jv] = abs2uv(p.u1, p.v1, textureMap.width, textureMap.height);
+		uv[jv + 1] = abs2uv(p.u2, p.v2, textureMap.width,
 			textureMap.height);
-		uv[jv + 2] = uvf(p.u3, p.v3, textureMap.width,
+		uv[jv + 2] = abs2uv(p.u3, p.v3, textureMap.width,
 			textureMap.height);
-		uv[jv + 3] = uvf(p.u4, p.v4, textureMap.width,
+		uv[jv + 3] = abs2uv(p.u4, p.v4, textureMap.width,
 			textureMap.height);
 
-		boneIndices[jv * 4] = bone(p.vertex1);
-		boneIndices[jv * 4 + 4] = bone(p.vertex2);
-		boneIndices[jv * 4 + 8] = bone(p.vertex3);
-		boneIndices[jv * 4 + 12] = bone(p.vertex4);
+		boneIndices[jv * 4] = boneId(p.vertex1);
+		boneIndices[jv * 4 + 4] = boneId(p.vertex2);
+		boneIndices[jv * 4 + 8] = boneId(p.vertex3);
+		boneIndices[jv * 4 + 12] = boneId(p.vertex4);
 
 		boneWeights[jv * 4] = 1.0f;
 		boneWeights[jv * 4 + 4] = 1.0f;
@@ -270,20 +270,20 @@ public class WEP extends Data {
 		jv += 4;
 
 	    } else {
-		vertices3[jv] = vec3(p.vertex1);
-		vertices3[jv + 1] = vec3(p.vertex2);
-		vertices3[jv + 2] = vec3(p.vertex3);
+		vertices3[jv] = pos(p.vertex1);
+		vertices3[jv + 1] = pos(p.vertex2);
+		vertices3[jv + 2] = pos(p.vertex3);
 
 		// uv is correctly reordered
-		uv[jv] = uvf(p.u2, p.v2, textureMap.width, textureMap.height);
-		uv[jv + 1] = uvf(p.u3, p.v3, textureMap.width,
+		uv[jv] = abs2uv(p.u2, p.v2, textureMap.width, textureMap.height);
+		uv[jv + 1] = abs2uv(p.u3, p.v3, textureMap.width,
 			textureMap.height);
-		uv[jv + 2] = uvf(p.u1, p.v1, textureMap.width,
+		uv[jv + 2] = abs2uv(p.u1, p.v1, textureMap.width,
 			textureMap.height);
 
-		boneIndices[jv * 4] = bone(p.vertex1);
-		boneIndices[jv * 4 + 4] = bone(p.vertex2);
-		boneIndices[jv * 4 + 8] = bone(p.vertex3);
+		boneIndices[jv * 4] = boneId(p.vertex1);
+		boneIndices[jv * 4 + 4] = boneId(p.vertex2);
+		boneIndices[jv * 4 + 8] = boneId(p.vertex3);
 
 		boneWeights[jv * 4] = 1.0f;
 		boneWeights[jv * 4 + 4] = 1.0f;
@@ -310,93 +310,117 @@ public class WEP extends Data {
 	    }
 	}
 
-	textureMap.build(palette);
+	// mesh creation
+	mesh = new Mesh();
 
-	log("building done");
+	mesh.setBuffer(Type.Position, 3,
+		BufferUtils.createFloatBuffer(vertices3));
+	mesh.setBuffer(Type.TexCoord, 2, BufferUtils.createFloatBuffer(uv));
+	mesh.setBuffer(Type.Index, 3, BufferUtils.createIntBuffer(indices));
+	mesh.setBuffer(Type.Normal, 3, BufferUtils.createFloatBuffer(vertices3));
+
+	FloatBuffer weights = BufferUtils.createFloatBuffer(boneWeights);
+	VertexBuffer weightsBuf = new VertexBuffer(Type.BoneWeight);
+	weightsBuf.setupData(Usage.CpuOnly, 4, Format.Float, weights);
+	mesh.setBuffer(weightsBuf);
+
+	ByteBuffer indices = BufferUtils.createByteBuffer(boneIndices);
+	VertexBuffer indicesBuf = new VertexBuffer(Type.BoneIndex);
+	indicesBuf.setupData(Usage.CpuOnly, 4, Format.UnsignedByte, indices);
+	mesh.setBuffer(indicesBuf);
+
+	// Create bind pose buffers
+	mesh.generateBindPose(true);
+
+	mesh.setMaxNumWeights(1);
+
+	mesh.updateBound();
+	
+	meshGeom = new Geometry("Mesh", mesh);
     }
 
-    public Vector3f vec3(int i) {
-	return new Vector3f(vertices[i].x, vertices[i].y, vertices[i].z);
-    }
-
-    public byte bone(int i) {
-	return (byte) (vertices[i].joint);
-    }
-
-    public void seperate(int g, int x, int y, int z) {
-	for (int i = 0; i < vertices.length; ++i) {
-	    if (vertices[i].group == g) {
-		vertices[i].x += x;
-		vertices[i].y += y;
-		vertices[i].z += z;
-	    }
-	}
-    }
-
-    public void buildMesh() {
-	if (vertices3 != null && uv != null && indices != null
-		&& boneWeights != null && boneIndices != null) {
-	    // mesh creation
-	    mesh = new Mesh();
-
-	    // faces
-	    mesh.setBuffer(Type.Position, 3,
-		    BufferUtils.createFloatBuffer(vertices3));
-	    mesh.setBuffer(Type.TexCoord, 2, BufferUtils.createFloatBuffer(uv));
-	    mesh.setBuffer(Type.Index, 3, BufferUtils.createIntBuffer(indices));
-	    mesh.setBuffer(Type.Normal, 3,
-		    BufferUtils.createFloatBuffer(vertices3));
-
-	    FloatBuffer weights = BufferUtils.createFloatBuffer(boneWeights);
-	    VertexBuffer weightsBuf = new VertexBuffer(Type.BoneWeight);
-	    weightsBuf.setupData(Usage.CpuOnly, 4, Format.Float, weights);
-	    mesh.setBuffer(weightsBuf);
-
-	    ByteBuffer indices = BufferUtils.createByteBuffer(boneIndices);
-	    VertexBuffer indicesBuf = new VertexBuffer(Type.BoneIndex);
-	    indicesBuf
-		    .setupData(Usage.CpuOnly, 4, Format.UnsignedByte, indices);
-	    mesh.setBuffer(indicesBuf);
-
-	    // Create bind pose buffers
-	    mesh.generateBindPose(true);
-
-	    mesh.setMaxNumWeights(1);
-	}
+    public void buildMaterial(Material material, int paletteId) {
+	textureMap.build(paletteId);
+	textureMap.setTexture(material);
+	meshGeom.setMaterial(material);
     }
 
     public void buildSkeleton() {
-	if (joints != null) {
-	    // build bones
-	    bones = new Bone[numJoints * 2];
+	// build bones
+	bones = new Bone[numJoints * 2];
 
-	    // rotation bones
-	    for (int i = 0; i < numJoints; ++i) {
-		bones[i] = new Bone("RBone" + i);
-		bones[i].setBindTransforms(Vector3f.ZERO, Quaternion.IDENTITY,
-			Vector3f.UNIT_XYZ);
-	    }
-
-	    // translation bones
-	    for (int i = numJoints; i < numJoints * 2; ++i) {
-		bones[i] = new Bone("TBone" + i);
-		bones[i].setBindTransforms(Vector3f.ZERO, Quaternion.IDENTITY,
-			Vector3f.UNIT_XYZ);
-		bones[i - numJoints].addChild(bones[i]);
-	    }
-
-	    for (int i = 0; i < numJoints; ++i) {
-		if (joints[i].parentJoint < joints.length) {
-		    bones[joints[i].parentJoint + numJoints].addChild(bones[i]);
-		}
-	    }
-
-	    skeleton = new Skeleton(bones);
-	    skeleton.updateWorldVectors();
-	    skeleton.setBindingPose();
+	// rotation bones
+	for (int i = 0; i < numJoints; ++i) {
+	    bones[i] = new Bone("RBone" + i);
+	    bones[i].setBindTransforms(Vector3f.ZERO, Quaternion.IDENTITY,
+		    Vector3f.UNIT_XYZ);
 	}
+
+	// translation bones
+	for (int i = numJoints; i < numJoints * 2; ++i) {
+	    bones[i] = new Bone("TBone" + i);
+	    bones[i].setBindTransforms(Vector3f.ZERO, Quaternion.IDENTITY,
+		    Vector3f.UNIT_XYZ);
+	    bones[i - numJoints].addChild(bones[i]);
+	}
+
+	for (int i = 0; i < numJoints; ++i) {
+	    if (joints[i].parentJointId < joints.length) {
+		bones[joints[i].parentJointId + numJoints].addChild(bones[i]);
+	    }
+	}
+
+	skeleton = new Skeleton(bones);
+	skeleton.updateWorldVectors();
+	skeleton.setBindingPose();
+    }
+
+    public void buildNode() {
+	node = new Node();
+	node.attachChild(meshGeom);
+
+	// create and attach controls
+	control = new AnimControl(skeleton);
+	node.addControl(control);
+	// adding the control to the geom has no effect
+	// ogre mesh loader adds it to the node as well
+
+	// additional skeleton control inspired by ogre mesh loader
+	skeletonControl = new SkeletonControl(skeleton);
+	node.addControl(skeletonControl);
+	// trying to add the skeletonControl to the geom gives an exception
+
+	node.scale(0.1f); // TODO this is a random default?
+	node.rotate(FastMath.PI, 0, 0);
+	node.updateModelBound();
+    }
+
+    public Vector3f pos(int i) {
+	return new Vector3f(vertices[i].x, vertices[i].y, vertices[i].z);
+    }
+
+    public byte boneId(int i) {
+	return (byte) (vertices[i].jointId);
     }
     
+    public Node getNode() {
+	return node;
+    }
+
+    public static void single() {
+	try {
+	    WEP t = new WEP(Util.read("OBJ/7F.WEP"));
+	    t.read();
+	} catch (Exception e) {
+	    e.printStackTrace();
+	}
+    }
+
+    public static void main(String[] args) {
+	single();
+	// Util.test(true, new File("OBJ"), "WEP", WEP.class);
+    }
+
     /**
      * @deprecated
      * @param pose
@@ -417,65 +441,6 @@ public class WEP extends Data {
 			Vector3f.UNIT_XYZ);
 	    }
 	}
-    }
-
-    public void buildNode() {
-	node = new Node();
-
-	if (mesh != null) {
-	    // create and attach node
-	    meshGeom = new Geometry("Mesh", mesh);
-	    mesh.updateBound();
-
-	    node.attachChild(meshGeom);
-	}
-
-	if (skeleton != null) {
-	    // create and attach controls
-	    control = new AnimControl(skeleton);
-	    node.addControl(control);
-	    // adding the control to the geom has no effect
-	    // ogre mesh loader adds it to the node as well
-
-	    // additional skeleton control inspired by ogre mesh loader
-	    skeletonControl = new SkeletonControl(skeleton);
-	    node.addControl(skeletonControl);
-	    // trying to add the skeletonControl to the geom gives an exception
-	}
-
-	node.scale(0.1f); // TODO this is a random default?
-	node.rotate(FastMath.PI, 0, 0);
-	node.setCullHint(CullHint.Never); // TODO fix bounding box for culling
-    }
-
-    public void buildMaterial(Material base) {
-	if (meshGeom != null && textureMap != null) {
-	    textureMap.setTexture(base);
-	    meshGeom.setMaterial(base);
-	}
-    }
-
-    public void setSEQ(SEQ seq) {
-	this.seq = seq;
-	for (int i = 0; i < seq.animations.length; ++i) {
-	    control.addAnim(seq.animations[i].animation);
-	}
-    }
-
-    public static void single() {
-	try {
-	    WEP t = new WEP(Util.read("OBJ/7F.WEP"));
-	    t.header();
-	    t.data();
-	    t.build(0);
-	} catch (Exception e) {
-	    e.printStackTrace();
-	}
-    }
-
-    public static void main(String[] args) {
-	// single();
-	Util.test(false, new File("OBJ"), "WEP", WEP.class);
     }
 
     public int numJoints;
@@ -518,8 +483,6 @@ public class WEP extends Data {
     public Mesh mesh;
     public Skeleton skeleton;
     public Bone[] bones;
-    
-    public SEQ seq;
 
     public Geometry meshGeom;
     public Node node;

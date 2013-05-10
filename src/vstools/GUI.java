@@ -66,7 +66,7 @@ public class GUI {
     }
 
     private void createFrame() {
-        frame = new JFrame("Test");
+        frame = new JFrame("VSTOOLS Viewer");
         frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         frame.addWindowListener(new WindowAdapter() {
             @Override

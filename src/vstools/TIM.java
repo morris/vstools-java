@@ -7,7 +7,7 @@ public class TIM extends Data {
     }
 
     public void read(int mode) {
-	log("tim begin");
+	log("TIM");
 
 	// 12 byte header
 	skip(4); // magic 10 00 00 00
@@ -60,7 +60,7 @@ public class TIM extends Data {
 	    }
 	}
 
-	log("tim done");
+	log("TIM done");
     }
 
     public void colorBytes(byte[] buffer, int i) {
