@@ -1,5 +1,7 @@
 package vstools;
 
+import java.util.ArrayList;
+
 public class SHP extends WEP {
 
     public SHP(ByteArray data) {
@@ -7,8 +9,8 @@ public class SHP extends WEP {
     }
 
     public void header() {
-	
-	log("SHP header");
+
+	log("-- SHP header");
 
 	header1();
 
@@ -73,8 +75,8 @@ public class SHP extends WEP {
     }
 
     public void data() {
-	log("SHP data");
-	
+	log("-- SHP data");
+
 	logpos();
 	jointSection();
 	logpos();
@@ -101,8 +103,6 @@ public class SHP extends WEP {
 	log("magicSectionLength: " + hex(length));
 	skip(length);
 
-	log(hex(data.pos));
-
 	log("textureMapPtr should be " + hex(length + magicPtr + 8));
 
 	// texture section
@@ -113,13 +113,20 @@ public class SHP extends WEP {
 	header();
 	data();
     }
-    
+
+    public void setPose() {
+
+    }
+
     public void setSEQ(SEQ seq) {
 	this.activeSeq = seq;
 
 	// remove current animations
-	for (String animName : control.getAnimationNames()) {
-	    control.removeAnim(control.getAnim(animName));
+	ArrayList<String> names = new ArrayList<String>(
+		control.getAnimationNames());
+
+	for (String name : names) {
+	    control.removeAnim(control.getAnim(name));
 	}
 
 	// set new animations
@@ -170,7 +177,7 @@ public class SHP extends WEP {
 
     public int akao;
     public int[] akaoTable;
-    
+
     public SEQ[] seqs;
     public SEQ activeSeq;
 }

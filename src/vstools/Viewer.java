@@ -81,7 +81,7 @@ public class Viewer extends SimpleApplication implements ActionListener {
 	    flyCamLight.setPosition(cam.getLocation());
 	    flyCamLight.setDirection(cam.getDirection());
 	}
-	if(node != null) {
+	if (node != null) {
 	    node.updateModelBound();
 	}
     }
@@ -106,30 +106,32 @@ public class Viewer extends SimpleApplication implements ActionListener {
 	    prevAnim();
 	} else if (name.equals("nextAnim") && !keyPressed) {
 	    nextAnim();
-	} else if(name.equals("debugSkeleton") && !keyPressed) {
+	} else if (name.equals("debugSkeleton") && !keyPressed) {
 	    debugSkeleton(skeleton, node);
 	}
     }
 
     public void openWEP(File file) {
-        // remove current node
-        if (node != null) {
-            node.removeFromParent();
-        }
-    
-        try {
-            WEP wep = null;
-    
-            wep = new WEP(Util.read(file));
-            wep.read();
-            wep.build(unshaded());
-    
-            // finally, attach node to scene
-            node = wep.getNode();
-            rootNode.attachChild(node);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+	// remove current node
+	if (node != null) {
+	    node.removeFromParent();
+	}
+
+	try {
+	    WEP wep = null;
+
+	    wep = new WEP(Util.read(file));
+	    wep.read();
+	    wep.build(unshaded());
+
+	    debugSkeleton(wep.skeleton, wep.getNode());
+
+	    // finally, attach node to scene
+	    node = wep.getNode();
+	    rootNode.attachChild(node);
+	} catch (Exception e) {
+	    e.printStackTrace();
+	}
     }
 
     public void openSHP(File file) {
@@ -157,56 +159,58 @@ public class Viewer extends SimpleApplication implements ActionListener {
     }
 
     public void openSEQ(File file) {
-        try {
-            seq = new SEQ(shp, Util.read(file));
-            seq.read();
-            shp.setSEQ(seq);
-    
-            animIndex = 0;
-            channel = shp.control.createChannel();
-            channel.setAnim("Animation0");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+	try {
+	    seq = new SEQ(shp, Util.read(file));
+	    seq.read();
+	    shp.setSEQ(seq);
+
+	    animIndex = 0;
+	    channel = shp.control.createChannel();
+	    channel.setAnim("Animation0");
+	} catch (Exception e) {
+	    e.printStackTrace();
+	}
     }
 
     /**
-     * TODO this is broken. animations don't load properly.
+     * This only loads the SHP and SEQ. Weapons are not displayed (yet).
+     * 
      * @param file
      */
     public void openZUD(File file) {
-        // remove current node
-        if (node != null) {
-            node.removeFromParent();
-        }
-    
-        try {
-            ZUD zud = null;
-    
-            zud = new ZUD(Util.read(file));
-            zud.read();
-    
-            shp = zud.shp;
-            shp.build(unshaded());
-    
-            seq = zud.com;
-            if (seq == null) {
-        	seq = zud.bt;
-            }
-    
-            shp.setSEQ(seq);
-    
-            channel = shp.control.createChannel();
-            channel.setAnim("Animation0");
-    
-            // debug skeleton
-            debugSkeleton(shp.skeleton, shp.node);
-    
-            node = zud.getNode();
-            rootNode.attachChild(node);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+	// remove current node
+	if (node != null) {
+	    node.removeFromParent();
+	}
+
+	try {
+	    ZUD zud = null;
+
+	    zud = new ZUD(Util.read(file));
+	    zud.read();
+
+	    shp = zud.shp;
+	    shp.build(unshaded());
+
+	    seq = zud.com;
+	    if (seq == null) {
+		seq = zud.bt;
+	    }
+
+	    if (seq != null) {
+		shp.setSEQ(seq);
+		channel = shp.control.createChannel();
+		channel.setAnim("Animation0");
+	    }
+
+	    // debug skeleton
+	    debugSkeleton(shp.skeleton, shp.node);
+
+	    node = zud.getNode();
+	    rootNode.attachChild(node);
+	} catch (Exception e) {
+	    e.printStackTrace();
+	}
     }
 
     public void openMPD(File file) {
@@ -227,31 +231,30 @@ public class Viewer extends SimpleApplication implements ActionListener {
     }
 
     public void openZND(File file) {
-        // TODO
+	// TODO
     }
 
     public void openARM(File file) {
-        // remove current node
-        if (node != null) {
-            node.removeFromParent();
-        }
-    
-        try {
-            ARM arm = new ARM(Util.read(file));
-    
-            arm.read();
-            arm.build(this);
-            node = arm.node;
-            rootNode.attachChild(node);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+	// remove current node
+	if (node != null) {
+	    node.removeFromParent();
+	}
+
+	try {
+	    ARM arm = new ARM(Util.read(file));
+
+	    arm.read();
+	    arm.build(this);
+	    node = arm.node;
+	    rootNode.attachChild(node);
+	} catch (IOException e) {
+	    e.printStackTrace();
+	}
     }
 
     public void debugSkeleton(Skeleton skeleton, Node node) {
 	if (skeleton != null && node != null) {
-	    skeletonDebug = new SkeletonDebugger("skeleton",
-		    skeleton);
+	    skeletonDebug = new SkeletonDebugger("skeleton", skeleton);
 	    Material mat = unshaded();
 	    mat.setColor("Color", ColorRGBA.Green);
 	    mat.getAdditionalRenderState().setDepthTest(false);
@@ -282,14 +285,14 @@ public class Viewer extends SimpleApplication implements ActionListener {
     }
 
     public Material flat(ColorRGBA c) {
-        Material mat = new Material(assetManager,
-        	"Common/MatDefs/Light/Lighting.j3md");
-    
-        mat.setColor("Diffuse", c);
-        mat.setColor("Ambient", c);
-        mat.setColor("Specular", c);
-        mat.setBoolean("UseMaterialColors", true);
-        return mat;
+	Material mat = new Material(assetManager,
+		"Common/MatDefs/Light/Lighting.j3md");
+
+	mat.setColor("Diffuse", c);
+	mat.setColor("Ambient", c);
+	mat.setColor("Specular", c);
+	mat.setBoolean("UseMaterialColors", true);
+	return mat;
     }
 
     public Box getBox() {
@@ -310,5 +313,5 @@ public class Viewer extends SimpleApplication implements ActionListener {
     private SEQ seq; // current seq
     private Node node; // current node in viewer
     private Skeleton skeleton; // skeleton of current node
-    private SkeletonDebugger skeletonDebug; 
+    private SkeletonDebugger skeletonDebug;
 }

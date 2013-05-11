@@ -46,6 +46,8 @@ public class ZUD extends Data {
 	    weapon.read();
 	} catch (Exception e) {
 	    log("weapon failed");
+	    e.printStackTrace();
+	    weapon = null;
 	}
 
 	seek(ptrShieldWEP);
@@ -54,6 +56,8 @@ public class ZUD extends Data {
 	    shield.read();
 	} catch (Exception e) {
 	    log("shield failed");
+	    e.printStackTrace();
+	    shield = null;
 	}
 
 	seek(ptrCommonSEQ);
@@ -62,6 +66,8 @@ public class ZUD extends Data {
 	    com.read();
 	} catch (Exception e) {
 	    log("common seq failed");
+	    e.printStackTrace();
+	    com = null;
 	}
 
 	seek(ptrBattleSEQ);
@@ -70,6 +76,8 @@ public class ZUD extends Data {
 	    bt.read();
 	} catch (Exception e) {
 	    log("battle seq failed");
+	    e.printStackTrace();
+	    bt = null;
 	}
     }
 
@@ -80,7 +88,7 @@ public class ZUD extends Data {
 
     public static void main(String[] args) {
 	try {
-	    ZUD t = new ZUD(Util.read("MAP/Z001U00.ZUD"));
+	    ZUD t = new ZUD(Util.read("MAP/Z001U01.ZUD"));
 	    t.read();
 	} catch (IOException e) {
 	    e.printStackTrace();

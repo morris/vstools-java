@@ -14,10 +14,15 @@ public class SEQ extends Data {
     }
 
     public void header() {
+	log("-- SEQ header");
+	
+	// base ptr needed because seq may be embedded
+	basePtr = data.pos;
+	
 	numSlots = u16(); // "slots" is just some random name, purpose unknown
 	numJoints = u8();
 	skip(1); // padding
-	size = u32(); // file size, useless for this tools
+	size = u32(); // file size
 	h3 = u32(); // unknown
 	slotPtr = u32() + 8; // ptr to slots
 	dataPtr = slotPtr + numSlots; // ptr to rotation and opcode data
@@ -28,6 +33,8 @@ public class SEQ extends Data {
     }
 
     public void data() {
+	log("-- SEQ data");
+	
 	// number of animations has to be computed
 	numAnimations = (dataPtr - 16) / (numJoints * 4 + 10);
 	log("numAnimations: " + numAnimations);
@@ -46,6 +53,8 @@ public class SEQ extends Data {
 	for (int i = 0; i < numSlots; ++i) {
 	    slots[i] = s8();
 	}
+	
+	log("-- SEQ computation");
 
 	// compute animations
 	for (int i = 0; i < numAnimations; ++i) {
@@ -59,11 +68,7 @@ public class SEQ extends Data {
     }
 
     public int ptrData(int i) {
-	return i + dataPtr;
-    }
-
-    public int ptrDataRam(int i) {
-	return i + 0x1275d2;
+	return i + dataPtr + basePtr;
     }
 
     /**
@@ -115,8 +120,8 @@ public class SEQ extends Data {
 	    shp.read();
 	    SEQ seq = new SEQ(shp, Util.read("OBJ/00_COM.SEQ"));
 	    seq.read();
-	    seq.opcodes();
-	    seq.ptr1s();
+	    //seq.opcodes();
+	    //seq.ptr1s();
 	} catch (Exception e) {
 	    e.printStackTrace();
 	}
@@ -128,6 +133,7 @@ public class SEQ extends Data {
 
     public SHP shp;
 
+    public int basePtr;
     public int numSlots;
     public int numJoints;
     public int size;

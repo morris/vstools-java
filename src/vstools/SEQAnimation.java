@@ -21,32 +21,37 @@ public class SEQAnimation extends Data {
 
     public void header(int id) {
 	this.id = id;
-	numFrames = s16(); // not sure about this
-	idOtherAnimation = s8(); // some animations use a different animation as
-				 // base
-	mode = u8(); // this is
+	numFrames = u16(); // not sure about this
 
-	ptr1 = s16(); // seems to point to an opcode block that controls looping
-	ptrTranslation = s16(); // points to a translation vector for the
-				// animated character
-	ptrMove = s16(); // points to an opcode block that controls movement
+	// some animations use a different animation as base
+	idOtherAnimation = s8();
+	assert idOtherAnimation >= -1 && idOtherAnimation < seq.numAnimations;
+
+	mode = u8(); // unknown. has weird effects on character mesh
+
+	// seems to point to an opcode block that controls looping
+	ptr1 = u16(); 
+	
+	// points to a translation vector for the animated character
+	ptrTranslation = u16();
+	
+	// points to an opcode block that controls movement
+	ptrMove = u16();
 
 	// just some logging
 	log("animation " + id);
 	log("numFrames: " + numFrames);
 	log("idOtherPose: " + idOtherAnimation);
 	log("mode: " + mode);
-	log("ptr1: " + hex(seq.ptrData(ptr1)) + " (" + ptr1 + ") "
-		+ hex(seq.ptrDataRam(ptr1)));
+	log("ptr1: " + hex(seq.ptrData(ptr1)) + " (" + ptr1 + ")");
 	log("ptrTranslation: " + hex(seq.ptrData(ptrTranslation)) + " ("
-		+ ptrTranslation + ") " + hex(seq.ptrDataRam(ptrTranslation)));
-	log("ptrMove: " + hex(seq.ptrData(ptrMove)) + " (" + ptrMove + ") "
-		+ hex(seq.ptrDataRam(ptrMove)));
+		+ ptrTranslation + ")");
+	log("ptrMove: " + hex(seq.ptrData(ptrMove)) + " (" + ptrMove + ")");
 
 	// read pointers to rotations and opcodes for individual joints
 	ptrJoints = new int[seq.numJoints];
 	for (int i = 0; i < seq.numJoints; ++i) {
-	    ptrJoints[i] = s16();
+	    ptrJoints[i] = u16();
 	    log(i + " " + hex(seq.ptrData(ptrJoints[i])));
 	}
 
@@ -61,7 +66,7 @@ public class SEQAnimation extends Data {
 
 	// read translation
 	// big endian
-	data.seek(seq.dataPtr + ptrTranslation);
+	seek(seq.ptrData(ptrTranslation));
 
 	x = s16big();
 	y = s16big();
@@ -80,7 +85,7 @@ public class SEQAnimation extends Data {
 
 	// read rotation and opcodes
 	for (int i = 0; i < seq.numJoints; ++i) {
-	    data.seek(seq.dataPtr + base.ptrJoints[i]);
+	    seek(seq.ptrData(base.ptrJoints[i]));
 
 	    rotation(i);
 	    // opcodes(i); TODO doesnt work
@@ -89,7 +94,7 @@ public class SEQAnimation extends Data {
 	log("translation " + x + " " + y + " " + z);
 
 	// build animation
-	animation();
+	buildAnimation();
     }
 
     public void rotation(int i) {
@@ -99,6 +104,8 @@ public class SEQAnimation extends Data {
 	rx = s16big();
 	ry = s16big();
 	rz = s16big();
+	
+	log("rotation " + i + ": " + rx + " " + ry + " " + rz);
 
 	float fpitch = convert(rx);
 	float fyaw = convert(ry);
@@ -193,7 +200,7 @@ public class SEQAnimation extends Data {
      * builds the animation for jmonkey. every joint uses two jme bones, one for
      * rotation and one for translation.
      */
-    public void animation() {
+    public void buildAnimation() {
 	if (seq.shp != null) {
 	    animation = new Animation("Animation" + id, 0.5f);
 
@@ -224,7 +231,7 @@ public class SEQAnimation extends Data {
     }
 
     public float convert(int angle) {
-        return angle * CONVERT;
+	return angle * CONVERT;
     }
 
     // conversion factor for rotations to radians

@@ -216,6 +216,8 @@ public class GUI {
 	
 	if(ext.equals("seq")) {
 	    config.put("openSEQ", file.getAbsolutePath());
+	} else if(ext.equals("zud")) {
+	    config.put("openSEQ", "");
 	} else {
 	    config.put("open", file.getAbsolutePath());
 	}

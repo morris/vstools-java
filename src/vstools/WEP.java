@@ -41,7 +41,7 @@ public class WEP extends Data {
 
     public void header() {
 
-	log("WEP header");
+	log("-- WEP header");
 
 	header1();
 
@@ -90,13 +90,13 @@ public class WEP extends Data {
 
     public void data() {
 
-	log("WEP data");
+	log("-- WEP data");
 
 	jointSection();
 	groupSection();
 	vertexSection();
 	polygonSection();
-	textureSection(5);
+	textureSection(5); // 5 palettes
     }
 
     public void jointSection() {
@@ -335,7 +335,7 @@ public class WEP extends Data {
 	mesh.setMaxNumWeights(1);
 
 	mesh.updateBound();
-	
+
 	meshGeom = new Geometry("Mesh", mesh);
     }
 
@@ -373,6 +373,17 @@ public class WEP extends Data {
 	skeleton = new Skeleton(bones);
 	skeleton.updateWorldVectors();
 	skeleton.setBindingPose();
+	
+	setPose();
+    }
+
+    public void setPose() {
+        for (int i = numJoints + 1; i < numJoints * 2; ++i) {
+            bones[i].setUserControl(true);
+            Vector3f v = new Vector3f(joints[i - numJoints].length, 0, 0);
+            bones[i].setUserTransforms(v, Quaternion.IDENTITY,
+        	    Vector3f.UNIT_XYZ);
+        }
     }
 
     public void buildNode() {
@@ -402,7 +413,7 @@ public class WEP extends Data {
     public byte boneId(int i) {
 	return (byte) (vertices[i].jointId);
     }
-    
+
     public Node getNode() {
 	return node;
     }
