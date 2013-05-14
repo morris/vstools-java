@@ -25,7 +25,7 @@ public class ByteArray {
 	pos += i;
     }
 
-    public byte byt() {
+    public byte byte_() {
 	pos += 1;
 	return data[pos - 1];
     }
@@ -39,6 +39,18 @@ public class ByteArray {
 	return s8() & 0x000000ff;
     }
 
+    public int s16() {
+        return u8() | s8() << 8;
+    }
+
+    public int s16big() {
+        return s8() << 8 | u8();
+    }
+
+    public int u16() {
+        return s16() & 0x0000ffff;
+    }
+
     public int s32() {
 	return u8() | u8() << 8 | u8() << 16 | u8() << 24;
     }
@@ -47,18 +59,6 @@ public class ByteArray {
 	// TODO only works if u32 are really all smaller than 0x7fffffff
 	// should return long here, but this would break a lot
 	return s32();
-    }
-
-    public int s16() {
-	return u8() | s8() << 8;
-    }
-
-    public int s16big() {
-	return s8() << 8 | u8();
-    }
-
-    public int u16() {
-	return s16() & 0x0000ffff;
     }
 
     public int[] buf(int len) {

@@ -2,6 +2,7 @@ package vstools;
 
 import java.nio.ByteBuffer;
 import java.nio.FloatBuffer;
+import java.util.Arrays;
 
 import com.jme3.animation.AnimChannel;
 import com.jme3.animation.AnimControl;
@@ -46,28 +47,28 @@ public class WEP extends Data {
 	header1();
 
 	texturePtr = u32() + 0x10;
-	log("texturePtr: " + hex(texturePtr));
 
-	skip(0x30);
+	skip(0x30); // TODO whats this?
 
 	texturePtr = u32() + 0x10;
-	log("texturePtr (2): " + hex(texturePtr));
-
 	groupPtr = u32() + 0x10;
-	log("groupPtr: " + hex(groupPtr));
-
 	vertexPtr = u32() + 0x10;
-	log("vertexPtr: " + hex(vertexPtr));
-
 	polygonPtr = u32() + 0x10;
-	log("polygonPtr: " + hex(polygonPtr));
 
 	// static, unused
 	jointPtr = 0x4C + 0x4;
+	
+	log("texturePtr: " + hex(texturePtr));
+	log("texturePtr (2): " + hex(texturePtr));
+	log("groupPtr: " + hex(groupPtr));
+	log("vertexPtr: " + hex(vertexPtr));
+	log("polygonPtr: " + hex(polygonPtr));
     }
 
     public void header1() {
-	skip(4); // "H01 "
+	// magic "H01" + 0x00
+	int[] magic = buf(4);
+	assert Arrays.equals(magic, new int[] { 0x48, 0x30, 0x31, 0x00});
 
 	numJoints = u8();
 	numGroups = u8();
@@ -213,38 +214,38 @@ public class WEP extends Data {
 	for (int i = 0; i < polygons.length; ++i) {
 	    WEPPolygon p = polygons[i];
 	    if (p.quad()) {
-		vertices3[jv] = pos(p.vertex1);
+		vertices3[jv + 0] = pos(p.vertex1);
 		vertices3[jv + 1] = pos(p.vertex2);
 		vertices3[jv + 2] = pos(p.vertex3);
 		vertices3[jv + 3] = pos(p.vertex4);
 
-		verticesMap[jv] = p.vertex1;
+		verticesMap[jv + 0] = p.vertex1;
 		verticesMap[jv + 1] = p.vertex2;
 		verticesMap[jv + 2] = p.vertex3;
 		verticesMap[jv + 3] = p.vertex4;
 
-		uv[jv] = abs2uv(p.u1, p.v1, textureMap.width, textureMap.height);
-		uv[jv + 1] = abs2uv(p.u2, p.v2, textureMap.width,
+		uv[jv + 0] = Util.abs2uv(p.u1, p.v1, textureMap.width, textureMap.height);
+		uv[jv + 1] = Util.abs2uv(p.u2, p.v2, textureMap.width,
 			textureMap.height);
-		uv[jv + 2] = abs2uv(p.u3, p.v3, textureMap.width,
+		uv[jv + 2] = Util.abs2uv(p.u3, p.v3, textureMap.width,
 			textureMap.height);
-		uv[jv + 3] = abs2uv(p.u4, p.v4, textureMap.width,
+		uv[jv + 3] = Util.abs2uv(p.u4, p.v4, textureMap.width,
 			textureMap.height);
 
-		boneIndices[jv * 4] = boneId(p.vertex1);
+		boneIndices[jv * 4 + 0] = boneId(p.vertex1);
 		boneIndices[jv * 4 + 4] = boneId(p.vertex2);
 		boneIndices[jv * 4 + 8] = boneId(p.vertex3);
 		boneIndices[jv * 4 + 12] = boneId(p.vertex4);
 
-		boneWeights[jv * 4] = 1.0f;
+		boneWeights[jv * 4 + 0] = 1.0f;
 		boneWeights[jv * 4 + 4] = 1.0f;
 		boneWeights[jv * 4 + 8] = 1.0f;
 		boneWeights[jv * 4 + 12] = 1.0f;
 
 		// 3, 2, 1
-		indices[ji] = jv + 2;
+		indices[ji + 0] = jv + 2;
 		indices[ji + 1] = jv + 1;
-		indices[ji + 2] = jv;
+		indices[ji + 2] = jv + 0;
 
 		// 2, 3, 4
 		indices[ji + 3] = jv + 1;
@@ -255,7 +256,7 @@ public class WEP extends Data {
 
 		if (p.doubl()) {
 		    // 1, 2, 3
-		    indices[ji] = jv;
+		    indices[ji + 0] = jv + 0;
 		    indices[ji + 1] = jv + 1;
 		    indices[ji + 2] = jv + 2;
 
@@ -270,35 +271,35 @@ public class WEP extends Data {
 		jv += 4;
 
 	    } else {
-		vertices3[jv] = pos(p.vertex1);
+		vertices3[jv + 0] = pos(p.vertex1);
 		vertices3[jv + 1] = pos(p.vertex2);
 		vertices3[jv + 2] = pos(p.vertex3);
 
 		// uv is correctly reordered
-		uv[jv] = abs2uv(p.u2, p.v2, textureMap.width, textureMap.height);
-		uv[jv + 1] = abs2uv(p.u3, p.v3, textureMap.width,
+		uv[jv + 0] = Util.abs2uv(p.u2, p.v2, textureMap.width, textureMap.height);
+		uv[jv + 1] = Util.abs2uv(p.u3, p.v3, textureMap.width,
 			textureMap.height);
-		uv[jv + 2] = abs2uv(p.u1, p.v1, textureMap.width,
+		uv[jv + 2] = Util.abs2uv(p.u1, p.v1, textureMap.width,
 			textureMap.height);
 
-		boneIndices[jv * 4] = boneId(p.vertex1);
+		boneIndices[jv * 4 + 0] = boneId(p.vertex1);
 		boneIndices[jv * 4 + 4] = boneId(p.vertex2);
 		boneIndices[jv * 4 + 8] = boneId(p.vertex3);
 
-		boneWeights[jv * 4] = 1.0f;
+		boneWeights[jv * 4 + 0] = 1.0f;
 		boneWeights[jv * 4 + 4] = 1.0f;
 		boneWeights[jv * 4 + 8] = 1.0f;
 
 		// 3, 2, 1
-		indices[ji] = jv + 2;
+		indices[ji + 0] = jv + 2;
 		indices[ji + 1] = jv + 1;
-		indices[ji + 2] = jv;
+		indices[ji + 2] = jv + 0;
 
 		ji += 3;
 
 		if (p.doubl()) {
 		    // 1, 2, 3
-		    indices[ji] = jv;
+		    indices[ji + 0] = jv + 0;
 		    indices[ji + 1] = jv + 1;
 		    indices[ji + 2] = jv + 2;
 

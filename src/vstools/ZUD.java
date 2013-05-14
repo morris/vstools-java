@@ -19,16 +19,16 @@ public class ZUD extends Data {
 	idShieldMaterial = u8();
 	Unknown = u8();
 	skip(1); // padding
-	ptrCharacterSHP = s32();
-	lenCharacterSHP = s32();
-	ptrWeaponWEP = s32();
-	lenWeaponWEP = s32();
-	ptrShieldWEP = s32();
-	lenShieldWEP = s32();
-	ptrCommonSEQ = s32();
-	lenCommonSEQ = s32();
-	ptrBattleSEQ = s32();
-	lenBattleSEQ = s32();
+	ptrCharacterSHP = u32();
+	lenCharacterSHP = u32();
+	ptrWeaponWEP = u32();
+	lenWeaponWEP = u32();
+	ptrShieldWEP = u32();
+	lenShieldWEP = u32();
+	ptrCommonSEQ = u32();
+	lenCommonSEQ = u32();
+	ptrBattleSEQ = u32();
+	lenBattleSEQ = u32();
 
 	log("ptrWeaponWEP: " + hex(ptrWeaponWEP));
 	log("ptrShieldWEP: " + hex(ptrShieldWEP));

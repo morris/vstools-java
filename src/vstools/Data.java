@@ -2,8 +2,6 @@ package vstools;
 
 import java.awt.Color;
 
-import com.jme3.math.Vector2f;
-
 /**
  * Base class for all data structures
  * @author morris
@@ -28,8 +26,8 @@ public class Data {
 	data.skip(i);
     }
 
-    public byte byt() {
-	return data.byt();
+    public byte byte_() {
+	return data.byte_();
     }
 
     public int s8() {
@@ -69,22 +67,8 @@ public class Data {
     }
 
     public Color color() {
-	int bits = data.s16();
-	int a = (bits & 0x8000) >> 15;
-	int b = (bits & 0x7C00) >> 10;
-	int g = (bits & 0x03E0) >> 5;
-	int r = bits & 0x1F;
-
-	if (a == 0 && b == 0 && g == 0 && r == 0) {
-	    // 0,0,0 is defined as transparent
-	    return new Color(0, 0, 0, 0);
-	} else if (a == 0) {
-	    // 5bit -> 8bit is factor 2^3 = 8
-	    // TODO different conversions were suggested, investigate
-	    return new Color(r * 8, g * 8, b * 8);
-	} else {
-	    return new Color(0, 0, 0, 0);
-	}
+	int bits = data.u16();
+	return Util.color(bits);
     }
 
     /**
@@ -129,18 +113,10 @@ public class Data {
 	return Util.bin(i);
     }
     
-    /**
-     * Convert absolute coordinates on an image to relative UV coordinates.
-     * @param x
-     * @param y
-     * @param width image width
-     * @param height image height
-     * @return
-     */
-    public Vector2f abs2uv(int x, int y, int width, int height) {
-	return new Vector2f((float) x / (float) width, (float) y / (float) height);
+    public static String bin(int i, int width) {
+	return Util.bin(i, width);
     }
-
+    
     public void logDimensions(int size) {
 	String t = size + "";
 	int max = (int) Math.sqrt(size);

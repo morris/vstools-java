@@ -1,14 +1,24 @@
 package vstools;
 
+import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 
 public class MPDPolygon extends Data {
 
-    public MPDPolygon(ByteArray data) {
+    public MPDPolygon(MPDGroup group, ByteArray data) {
 	super(data);
+	this.group = group;
     }
 
-    public void read(boolean quad) {
+    public void readTriangle() {
+	read(false);
+    }
+
+    public void readQuad() {
+	read(true);
+    }
+
+    private void read(boolean quad) {
 	this.quad = quad;
 
 	// two bytes per axis
@@ -46,15 +56,25 @@ public class MPDPolygon extends Data {
 	b3 = u8();
 
 	v1 = u8();
+	u2 = u8();
 	v2 = u8();
+
+	clutId = u16();
+
+	u3 = u8();
 	v3 = u8();
 
-	texelMask = s16();
+	textureId = s16();
 
-	u2 = u8();
-	u3 = u8();
+	p1 = new Vector3f(p1x, p1y, p1z);
+	p2 = new Vector3f(p2x * group.scale + p1x, p2y * group.scale + p1y, p2z
+		* group.scale + p1z);
+	p3 = new Vector3f(p3x * group.scale + p1x, p3y * group.scale + p1y, p3z
+		* group.scale + p1z);
 
-	idTexture = s16();
+	uv1 = Util.abs2uv(u1, v1, 256, 256);
+	uv2 = Util.abs2uv(u2, v2, 256, 256);
+	uv3 = Util.abs2uv(u3, v3, 256, 256);
 
 	if (quad) {
 	    p4x = s8();
@@ -68,13 +88,19 @@ public class MPDPolygon extends Data {
 	    b4 = s8();
 
 	    v4 = u8();
+
+	    p4 = new Vector3f(p4x * group.scale + p1x, p4y * group.scale + p1y,
+		    p4z * group.scale + p1z);
+
+	    uv4 = Util.abs2uv(u4, v4, 256, 256);
 	} else {
-	    
+
 	}
 
 	// log("  polygon");
-	log("    texelMask: " + texelMask);
-	log("    idTexture: " + idTexture);
+	//log(textureId + " -> " + clutId);
+	//assert t2 == 56;
+	//log("textureId: " + ;
 	// log("    type: " + type + " / " + quad);
 	// log("    rgb1: " + r1 + " " + g1 + " " + b1);
 	// log("    rgb2: " + r2 + " " + g2 + " " + b2);
@@ -82,46 +108,84 @@ public class MPDPolygon extends Data {
 
     }
 
-    public boolean quad;
+    public String toString() {
+	String s = p1 + " " + uv1 + "\n" + p2 + " " + uv2 + "\n" + p3 + " "
+		+ uv3;
+	if (quad) {
+	    s += "\n" + p4 + " " + uv4;
+	}
+	return s;
+    }
+    
+    public boolean isQuad() {
+	return quad;
+    }
+
+    public MPDGroup group;
+
+    private boolean quad;
 
     // triangle
     public int p1x;
     public int p1y;
     public int p1z;
+
     public int p2x;
     public int p2y;
     public int p2z;
+
     public int p3x;
     public int p3y;
     public int p3z;
+
     public int r1;
     public int g1;
     public int b1;
+
     public int type;
+
     public int r2;
     public int g2;
     public int b2;
+
     public int u1;
+
     public int r3;
     public int g3;
     public int b3;
+
     public int v1;
     public int v2;
     public int v3;
-    public int texelMask;
+
+    public int clutId;
+    public int t2;
+
     public int u2;
     public int u3;
-    public int idTexture;
+
+    public int textureId;
 
     // quad
     public int p4x;
     public int p4y;
     public int p4z;
+
     public int u4;
+
     public int r4;
     public int g4;
     public int b4;
+
     public int v4;
 
-    Vector3f normal;
+    Vector3f p1;
+    Vector3f p2;
+    Vector3f p3;
+    Vector3f p4;
+
+    Vector2f uv1;
+    Vector2f uv2;
+    Vector2f uv3;
+    Vector2f uv4;
 }

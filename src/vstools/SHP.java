@@ -106,7 +106,7 @@ public class SHP extends WEP {
 	log("textureMapPtr should be " + hex(length + magicPtr + 8));
 
 	// texture section
-	textureSection(2);
+	textureSection(2);  // 2 palettes
     }
 
     public void read() {

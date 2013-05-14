@@ -20,88 +20,89 @@ import java.util.logging.Logger;
 import javax.swing.*;
 
 public class GUI {
-    
+
     public static void main(String[] args) {
-        GUI gui = new GUI();
-        gui.start();
+	GUI gui = new GUI();
+	gui.start();
     }
 
     public void start() {
-        JmeFormatter formatter = new JmeFormatter();
-    
-        Handler consoleHandler = new ConsoleHandler();
-        consoleHandler.setFormatter(formatter);
-    
-        Logger.getLogger("").removeHandler(
-        	Logger.getLogger("").getHandlers()[0]);
-        Logger.getLogger("").addHandler(consoleHandler);
-    
-        try {
-            UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    
-        createCanvas();
-    
-        try {
-            Thread.sleep(500);
-        } catch (InterruptedException ex) {
-    
-        }
-    
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() {
-        	JPopupMenu.setDefaultLightWeightPopupEnabled(false);
-    
-        	createFrame();
-    
-        	canvasPanel.add(canvas, BorderLayout.CENTER);
-        	frame.pack();
-        	startApp();
-        	frame.setLocationRelativeTo(null);
-        	frame.setVisible(true);
-            }
-        });
+	JmeFormatter formatter = new JmeFormatter();
+
+	Handler consoleHandler = new ConsoleHandler();
+	consoleHandler.setFormatter(formatter);
+
+	Logger.getLogger("").removeHandler(
+		Logger.getLogger("").getHandlers()[0]);
+	Logger.getLogger("").addHandler(consoleHandler);
+
+	try {
+	    UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+	} catch (Exception e) {
+	    e.printStackTrace();
+	}
+
+	createCanvas();
+
+	try {
+	    Thread.sleep(500);
+	} catch (InterruptedException ex) {
+
+	}
+
+	SwingUtilities.invokeLater(new Runnable() {
+	    public void run() {
+		JPopupMenu.setDefaultLightWeightPopupEnabled(false);
+
+		createFrame();
+
+		canvasPanel.add(canvas, BorderLayout.CENTER);
+		frame.pack();
+		startApp();
+		frame.setLocationRelativeTo(null);
+		frame.setVisible(true);
+	    }
+	});
     }
 
     private void createFrame() {
-        frame = new JFrame("VSTOOLS Viewer");
-        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
-        frame.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosed(WindowEvent e) {
-        	storeConfig();
-        	viewer.stop();
-            }
-        });
-    
-        canvasPanel = new JPanel();
-        canvasPanel.setLayout(new BorderLayout());
-    
-        frame.getContentPane().add(canvasPanel);
-        
-        createAnimationPanel();
-    
-        createMenu();
+	frame = new JFrame("VSTOOLS Viewer");
+	frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+	frame.addWindowListener(new WindowAdapter() {
+	    @Override
+	    public void windowClosed(WindowEvent e) {
+		storeConfig();
+		viewer.stop();
+	    }
+	});
+
+	canvasPanel = new JPanel();
+	canvasPanel.setLayout(new BorderLayout());
+
+	frame.getContentPane().add(canvasPanel);
+
+	createAnimationPanel();
+
+	createMenu();
     }
 
     private void createCanvas() {
-        AppSettings settings = new AppSettings(true);
-        settings.setWidth(640);
-        settings.setHeight(480);
+	AppSettings settings = new AppSettings(true);
+	settings.setWidth(640);
+	settings.setHeight(480);
+	settings.setFrameRate(60);
 
-        config = Util.getConfig();
-        
-        viewer = new Viewer();
-        viewer.setPauseOnLostFocus(false);
-        viewer.setSettings(settings);
-        viewer.createCanvas();
-        viewer.startCanvas();
-    
-        context = (JmeCanvasContext) viewer.getContext();
-        canvas = context.getCanvas();
-        canvas.setSize(settings.getWidth(), settings.getHeight());
+	config = Util.getConfig();
+
+	viewer = new Viewer();
+	viewer.setPauseOnLostFocus(false);
+	viewer.setSettings(settings);
+	viewer.createCanvas();
+	viewer.startCanvas();
+
+	context = (JmeCanvasContext) viewer.getContext();
+	canvas = context.getCanvas();
+	canvas.setSize(settings.getWidth(), settings.getHeight());
     }
 
     private void createMenu() {
@@ -115,14 +116,15 @@ public class GUI {
 	menuFile.add(itemOpen);
 	itemOpen.addActionListener(new ActionListener() {
 	    public void actionPerformed(ActionEvent e) {
-		final JFileChooser fc = new JFileChooser(
-			config.getProperty("currentDirectory"));
+		final JFileChooser fc = new JFileChooser(config
+			.getProperty("currentDirectory"));
 		if (e.getSource() == itemOpen) {
 		    int returnVal = fc.showOpenDialog(frame);
 
 		    if (returnVal == JFileChooser.APPROVE_OPTION) {
 			try {
-			    config.setProperty("currentDirectory", fc.getCurrentDirectory().getCanonicalPath());
+			    config.setProperty("currentDirectory", fc
+				    .getCurrentDirectory().getCanonicalPath());
 			} catch (IOException e1) {
 			    e1.printStackTrace();
 			}
@@ -145,31 +147,32 @@ public class GUI {
     }
 
     private void createAnimationPanel() {
-        JPanel animationPanel = new JPanel();
-        animationPanel.setLayout(new BoxLayout(animationPanel, BoxLayout.LINE_AXIS));
-        JLabel info = new JLabel("Animations ");
-        animationPanel.add(info);
-        final JButton prev = new JButton("<");
-        prev.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-        	if (e.getSource() == prev) {
-        	    viewer.prevAnim();
-        	}
-            }
-        });
-        animationPanel.add(prev);
-        
-        final JButton next = new JButton(">");
-        next.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-        	if (e.getSource() == next) {
-        	    viewer.nextAnim();
-        	}
-            }
-        });
-        
-        animationPanel.add(next);
-        canvasPanel.add(animationPanel, BorderLayout.SOUTH);
+	JPanel animationPanel = new JPanel();
+	animationPanel.setLayout(new BoxLayout(animationPanel,
+		BoxLayout.LINE_AXIS));
+	JLabel info = new JLabel("Animations ");
+	animationPanel.add(info);
+	final JButton prev = new JButton("<");
+	prev.addActionListener(new ActionListener() {
+	    public void actionPerformed(ActionEvent e) {
+		if (e.getSource() == prev) {
+		    viewer.prevAnim();
+		}
+	    }
+	});
+	animationPanel.add(prev);
+
+	final JButton next = new JButton(">");
+	next.addActionListener(new ActionListener() {
+	    public void actionPerformed(ActionEvent e) {
+		if (e.getSource() == next) {
+		    viewer.nextAnim();
+		}
+	    }
+	});
+
+	animationPanel.add(next);
+	canvasPanel.add(animationPanel, BorderLayout.SOUTH);
     }
 
     private void startApp() {
@@ -177,13 +180,19 @@ public class GUI {
 	viewer.enqueue(new Callable<Void>() {
 	    public Void call() {
 		viewer.getFlyByCamera().setDragToRotate(true);
+
+		if (!config.getProperty("openZND").equals("")) {
+		    open(new File(config.getProperty("openZND")));
+		}
 		
-		if(!config.getProperty("open").equals("")) {
+		if (!config.getProperty("open").equals("")) {
 		    open(new File(config.getProperty("open")));
 		}
-		if(!config.getProperty("openSEQ").equals("")) {
+		
+		if (!config.getProperty("openSEQ").equals("")) {
 		    open(new File(config.getProperty("openSEQ")));
 		}
+		
 		return null;
 	    }
 	});
@@ -193,12 +202,12 @@ public class GUI {
     private void storeConfig() {
 	Util.storeConfig();
     }
-    
+
     public void open(File file) {
 	String ext = Util.ext(file);
 
 	if (ext.equals("shp")) {
-	    
+
 	    viewer.openSHP(file);
 	} else if (ext.equals("wep")) {
 	    viewer.openWEP(file);
@@ -213,11 +222,13 @@ public class GUI {
 	} else if (ext.equals("arm")) {
 	    viewer.openARM(file);
 	}
-	
-	if(ext.equals("seq")) {
+
+	if (ext.equals("seq")) {
 	    config.put("openSEQ", file.getAbsolutePath());
-	} else if(ext.equals("zud")) {
+	} else if (ext.equals("zud")) {
 	    config.put("openSEQ", "");
+	} else if (ext.equals("znd")) {
+	    config.put("openZND", file.getAbsolutePath());
 	} else {
 	    config.put("open", file.getAbsolutePath());
 	}

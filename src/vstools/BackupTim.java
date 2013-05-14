@@ -43,8 +43,8 @@ public class BackupTim extends Data {
 
     public void colorBytes(byte[] buffer, int i) {
 	// int bits = is.readShort();
-	byte b1 = byt();
-	byte b2 = byt();
+	byte b1 = byte_();
+	byte b2 = byte_();
 
 	int a, b, g, r;
 

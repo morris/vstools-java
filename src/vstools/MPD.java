@@ -1,11 +1,7 @@
 package vstools;
 
-import com.jme3.math.ColorRGBA;
-import com.jme3.scene.Geometry;
-import com.jme3.scene.Mesh;
+import com.jme3.material.Material;
 import com.jme3.scene.Node;
-import com.jme3.scene.VertexBuffer.Type;
-import com.jme3.util.BufferUtils;
 
 /**
  * MPD data structure reader and builder
@@ -231,39 +227,37 @@ public class MPD extends Data {
 	log(Text.convert(s, 700));
     }
 
-    public void build(Viewer viewer) {
+    public void build() {
 
 	node = new Node("Map");
 
 	for (int i = 0; i < numGroups; ++i) {
-	    MPDGroup t = groups[i];
-
-	    t.build();
-
-	    Mesh mesh = new Mesh();
-	    mesh.setBuffer(Type.Position, 3,
-		    BufferUtils.createFloatBuffer(t.vertices3));
-	    mesh.setBuffer(Type.TexCoord, 2,
-		    BufferUtils.createFloatBuffer(t.uv));
-	    mesh.setBuffer(Type.Index, 3,
-		    BufferUtils.createIntBuffer(t.indices));
-	    mesh.setBuffer(Type.Normal, 3,
-		    BufferUtils.createFloatBuffer(t.normals));
-	    mesh.updateBound();
-
-	    if (viewer != null) {
-		Geometry geom = new Geometry("MapGroup", mesh);
-		geom.scale(0.1f);
-		geom.rotate((float) Math.PI, 0, 0);
-		geom.setMaterial(viewer.flat(ColorRGBA.Orange));
-		node.attachChild(geom);
+	    MPDGroup group = groups[i];
+	    group.build();
+	    
+	    for(MPDMesh mesh : group.meshes.values()) {
+		node.attachChild(mesh.geom);
+	    }
+	}
+	
+	for(MPDMesh m : groups[8].meshes.values()) {
+	    //m.geom.setMaterial(znd.app.debug());
+	}
+    }
+    
+    public void setMaterial(Material mat) {
+	for (int i = 0; i < numGroups; ++i) {
+	    MPDGroup group = groups[i];
+	    
+	    for(MPDMesh mesh : group.meshes.values()) {
+		mesh.geom.setMaterial(mat);
 	    }
 	}
     }
 
     public static void main(String[] args) {
 	try {
-	    MPD mpd = new MPD(Util.read("MAP/MAP002.MPD"));
+	    MPD mpd = new MPD(Util.read("MAP/MAP009.MPD"));
 	    mpd.read();
 
 	} catch (Exception e) {

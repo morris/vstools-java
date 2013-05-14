@@ -1,5 +1,6 @@
 package vstools;
 
+import java.awt.Color;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FileInputStream;
@@ -12,6 +13,7 @@ import java.util.Properties;
 
 import com.jme3.math.FastMath;
 import com.jme3.math.Quaternion;
+import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 
 public class Util {
@@ -135,6 +137,36 @@ public class Util {
 	}
 
 	String ext;
+    }
+    
+    /**
+     * Convert absolute coordinates on an image to relative UV coordinates.
+     * @param x
+     * @param y
+     * @param width image width
+     * @param height image height
+     * @return
+     */
+    public static Vector2f abs2uv(int x, int y, int width, int height) {
+	return new Vector2f((float) x / (float) width, (float) y / (float) height);
+    }
+    
+    public static Color color(int bits) {
+	int a = (bits & 0x8000) >> 15;
+	int b = (bits & 0x7C00) >> 10;
+	int g = (bits & 0x03E0) >> 5;
+	int r = bits & 0x1F;
+	
+	if (a == 0 && b == 0 && g == 0 && r == 0) {
+	    // 0,0,0 is defined as transparent
+	    return new Color(0, 0, 0, 0);
+	} else if (a == 0) {
+	    // 5bit -> 8bit is factor 2^3 = 8
+	    // TODO different conversions were suggested, investigate
+	    return new Color(r * 8, g * 8, b * 8);
+	} else {
+	    return new Color(0, 0, 0, 0);
+	}
     }
 
     public static Quaternion quat(float u, float v, float w) {

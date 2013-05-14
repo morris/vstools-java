@@ -8,7 +8,7 @@ public class WEPPolygon extends Data {
     }
 
     public void read() {
-	type = byt();
+	type = byte_();
 	if (type == 0x2C) {
 	    // quad
 	} else if (type == 0x24) {
@@ -16,8 +16,8 @@ public class WEPPolygon extends Data {
 	} else {
 	    log("unknown poly: " + hex(type));
 	}
-	size = byt();
-	info = byt();
+	size = byte_();
+	info = byte_();
 	skip(1); // always 0
 
 	vertex1 = (short) (u16() / 4);
