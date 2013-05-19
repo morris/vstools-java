@@ -35,6 +35,7 @@ public class App extends SimpleApplication implements ActionListener {
 	// flycam is enabled by default
 	flyCam.setMoveSpeed(100);
 	flyCamLight = new SpotLight();
+	flyCamLight.setColor(new ColorRGBA(1f, 0.8f, 0.7f, 1.0f));
 	flyCamLight.setColor(ColorRGBA.White);
 	flyCamLight.setSpotRange(1000);
 	flyCamLight.setSpotInnerAngle(80f * FastMath.DEG_TO_RAD);

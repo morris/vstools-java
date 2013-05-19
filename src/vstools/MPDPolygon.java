@@ -83,10 +83,10 @@ public class MPDPolygon extends Data {
 
 	    u4 = u8();
 
-	    r4 = s8();
-	    g4 = s8();
-	    b4 = s8();
-
+	    r4 = u8();
+	    g4 = u8();
+	    b4 = u8();
+	    
 	    v4 = u8();
 
 	    p4 = new Vector3f(p4x * group.scale + p1x, p4y * group.scale + p1y,

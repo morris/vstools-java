@@ -3,7 +3,6 @@ package vstools;
 import java.awt.Color;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
-import java.util.Random;
 
 import com.jme3.material.Material;
 import com.jme3.material.RenderState.BlendMode;
@@ -59,18 +58,29 @@ public class TIM extends Data {
 	}
     }
 
+    public void markFrameBuffer(FrameBuffer fb) {
+	for (int y = 0; y < height; ++y) {
+	    for (int x = 0; x < width; ++x) {
+		Color c = Color.red;
+		fb.setPixel(fx + x, fy + y, c);
+	    }
+	}
+    }
+
     public byte[] buildCLUT(int x, int y) {
 	int ox = x - fx;
 	int oy = y - fy;
 
 	log("clut");
 	log(ox + ", " + oy);
-	
+
 	seek(dataPtr + (oy * width + ox) * 2);
 
 	byte[] buffer = new byte[64];
 	for (int i = 0; i < 64; i += 4) {
 	    Color c = color();
+
+	    log(c);
 
 	    buffer[i] = (byte) c.getAlpha();
 	    buffer[i + 1] = (byte) c.getBlue();
@@ -97,6 +107,7 @@ public class TIM extends Data {
 	    buffer[i + 1] = clut[r + 1];
 	    buffer[i + 2] = clut[r + 2];
 	    buffer[i + 3] = clut[r + 3];
+
 	    buffer[i + 4] = clut[l + 0];
 	    buffer[i + 5] = clut[l + 1];
 	    buffer[i + 6] = clut[l + 2];
@@ -112,9 +123,11 @@ public class TIM extends Data {
 	tex.setImage(image);
 	tex.setMagFilter(Texture2D.MagFilter.Nearest);
 
-	Material mat = app.lighting();
-	mat.setTexture("DiffuseMap", tex);
+	Material mat = app.unshaded();
+	mat.setTexture("ColorMap", tex);
+	mat.setBoolean("VertexColor", true);
 	mat.getAdditionalRenderState().setBlendMode(BlendMode.Alpha);
+	mat.getAdditionalRenderState().setAlphaTest(true);
 
 	return mat;
     }
@@ -127,7 +140,7 @@ public class TIM extends Data {
 	byte[] buffer = new byte[size];
 	for (int i = 0; i < size; i += 8) {
 	    byte c = byte_();
-	    
+
 	    byte l = (byte) ((c & 0xF0) >> 4);
 	    byte r = (byte) (c & 0x0F);
 
@@ -142,7 +155,6 @@ public class TIM extends Data {
 	    buffer[i + 7] = l;
 	}
 
-
 	// build material
 	ByteBuffer bb = BufferUtils.createByteBuffer(buffer);
 
@@ -154,7 +166,7 @@ public class TIM extends Data {
 
 	Material mat = app.unshaded();
 	mat.setTexture("ColorMap", tex);
-	//mat.getAdditionalRenderState().setBlendMode(BlendMode.Additive);
+	// mat.getAdditionalRenderState().setBlendMode(BlendMode.Additive);
 
 	return mat;
     }

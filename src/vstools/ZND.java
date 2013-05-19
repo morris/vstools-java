@@ -6,6 +6,7 @@ import java.util.HashMap;
 
 import com.jme3.material.Material;
 import com.jme3.material.RenderState.BlendMode;
+import com.jme3.math.ColorRGBA;
 import com.jme3.texture.Image;
 import com.jme3.texture.Texture2D;
 import com.jme3.util.BufferUtils;
@@ -79,16 +80,20 @@ public class ZND extends Data {
 	    tims[i] = new TIM(data);
 	    tims[i].read();
 	    tims[i].app = app;
-	    tims[i].copyToFrameBuffer(frameBuffer);
+	    if(tims[i].height < 5) {
+		tims[i].copyToFrameBuffer(frameBuffer);
+	    }
 	}
 	
-	byte[] clut = tims[tims.length - 3].buildCLUT(0, 0);
-	for(int i = 0; i < clut.length; ++i) {
-	    frameBuffer.buffer[i] = clut[i];
-	}
+	frameBuffer.markCLUT(0);
+	frameBuffer.markCLUT(1);
     }
 
     public Material getMaterial(int textureId, int clutId) {
+	log(clutId);
+
+	//frameBuffer.markCLUT(clutId);
+	
 	String id = textureId + "" + clutId;
 
 	if (textureId - 5 >= tims.length) {
@@ -104,6 +109,8 @@ public class ZND extends Data {
 	    // find CLUT
 	    int x = (clutId * 16) % 1024;
 	    int y = (clutId * 16) / 1024;
+	    
+	    log(x + ","+ y);
 
 	    byte[] clut = null;
 	    for (TIM tim : tims) {
@@ -118,9 +125,16 @@ public class ZND extends Data {
 	    // build texture
 	    Material mat = texture.buildTexture4(clut);
 	    //mat = texture.buildGreyTexture4();
+	    
+	    //mat = app.flat(ColorRGBA.randomColor());
+	    
+	    //mat = app.unshaded();
+	    
 
 	    // store
 	    materials.put(id, mat);
+	    
+	    
 
 	    return mat;
 	}

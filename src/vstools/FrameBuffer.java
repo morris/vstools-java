@@ -38,14 +38,14 @@ public class FrameBuffer {
     public void markCLUT(int id) {
 	Random random = new Random();
 	byte a = (byte) 255;
-	byte b = (byte) random.nextInt(256);
-	byte g = (byte) random.nextInt(256);
-	byte r = (byte) random.nextInt(256);
+	byte b = (byte) 0;
+	byte g = (byte) 0;
+	byte r = (byte) 255;
 
 	int ilo = id * 64;
 	int ihi = ilo + 64;
 	for (int i = ilo; i < ihi; i += 4) {
-	    buffer[i] = a;
+	    buffer[i + 0] = a;
 	    buffer[i + 1] = b;
 	    buffer[i + 2] = g;
 	    buffer[i + 3] = r;

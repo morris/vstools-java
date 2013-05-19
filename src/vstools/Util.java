@@ -155,7 +155,7 @@ public class Util {
 	int a = (bits & 0x8000) >> 15;
 	int b = (bits & 0x7C00) >> 10;
 	int g = (bits & 0x03E0) >> 5;
-	int r = bits & 0x1F;
+	int r = (bits & 0x001F);
 	
 	if (a == 0 && b == 0 && g == 0 && r == 0) {
 	    // 0,0,0 is defined as transparent

@@ -168,6 +168,9 @@ public class Viewer extends App {
 	    mpd.build();
 	    if(znd == null) {
 		mpd.setMaterial(flat(ColorRGBA.Orange));
+	    } else {
+		znd.frameBuffer.build(this);
+		rootNode.attachChild(znd.frameBuffer.node);
 	    }
 	    node = mpd.node;
 	    //node.setMaterial(wireframe(ColorRGBA.Red));
@@ -182,10 +185,6 @@ public class Viewer extends App {
 	    znd = new ZND(Util.read(file));
 	    znd.app = this;
 	    znd.read();
-	    
-	    //znd.frameBuffer.build(this);
-	    //znd.frameBuffer.node.setMaterial(znd.getMaterial(11, 14457));
-	    rootNode.attachChild(znd.frameBuffer.node);
 	} catch (Exception e) {
 	    e.printStackTrace();
 	}
