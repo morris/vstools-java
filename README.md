@@ -1,3 +1,9 @@
+__Replaced with https://github.com/morris/vstools__
+
+This repo is dead. It has been ported to JavaScript/WebGL as a replacement.
+
+----
+
 # Vagrant Story Tools
 
 This is an incomplete toolset for Vagrant Story (2000, Square). It
